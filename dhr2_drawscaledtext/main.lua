@@ -2,11 +2,7 @@
 require "dhr2_love_drawscaledtext"
 
 function love.load()
-	local characterlist = {
-	" ", "!", "\""
-	
-	
-	}
+
 end
 
 function love.draw()
