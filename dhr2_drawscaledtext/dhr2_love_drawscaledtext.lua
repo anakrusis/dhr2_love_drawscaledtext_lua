@@ -55,6 +55,18 @@ for i = 1, #content do
 	end
 end
 
+-- defining colors for hieroglyphic text
+colors = {
+	white = {1,1,1},
+	gray = {0.66,0.66,0.66},
+	yellow = {1,1,0},
+	red = {1,0,0},
+	brown = {0.66, 0.33, 0},
+	green = {0,1,0},
+	cyan = {0,1,1},
+	magenta = {0.66,0,1}
+}
+
 
 --[[
 
@@ -102,6 +114,12 @@ function drawscaledtext( x, y, xs, ys, string )
 
   if bbcfont[c] == nil then      -- If no glyph is define for this character, we use the fallback glyph.
    c = 0
+  end
+  
+  if textcolors[c] then
+	love.graphics.setColor( colors[ textcolors[c] ] )
+  else
+	love.graphics.setColor( colors[ "white" ] );
   end
 
   for xx=1,8,1 do               --  For each pixel in the 8x8 pixel glyph representing this character,
