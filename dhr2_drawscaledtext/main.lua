@@ -48,7 +48,8 @@ function love.load()
 end
 
 function love.draw()
-	love.graphics.draw(cnv)
+	--love.graphics.draw(cnv)
+ drawscaledtext(10,10,4,4,"Please work")
 end
 
 function tbl2str( tbl )

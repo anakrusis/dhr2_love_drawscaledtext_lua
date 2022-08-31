@@ -1,0 +1,133 @@
+option "vsize" 1024
+variable fin fout i j l x y b pixls nil;
+set fin openin"font.bin"
+set fout openout"font16.bin"
+
+set pixls alloc * 16 16;
+set nil alloc 1; set Dnil 0
+
+startgraphics 1024 1024
+
+/*
+while ! eof fin
+ loadchar
+ cls
+ displaychar
+ while ! mouseb
+  wait 32
+ endwhile
+ while mouseb
+ endwhile
+endwhile
+*/
+
+while < ptr fin ext fin
+ loadchar
+ displaychar ( * %(+ neg 8 ptr fin)( * 8 16) 8 ) (* 64 int / (+ neg 8 ptr fin) * 8 16) 2 
+ savechar
+ #wait 100
+endwhile
+
+while ! mouseb
+ wait 16.6
+endwhile
+
+quit
+
+function displaychar _x _y s local x y;
+ set y 0
+ while < y 16
+  set x 0
+  while < x 16   
+   gcol | 255 neg !!Dpxl(x)(y)
+   rectanglef (+ _x << x s) (+ _y << y s) - << 1 s 0
+   set x + x 1
+  endwhile
+  set y + y 1
+ endwhile
+endfunction
+
+function savechar local x y v;
+ set y 0
+ while < y 16
+  set v 0
+  set x 0
+  while < x 16   
+   set v | Dpxl(x)(y) << v 1
+   set x + x 1
+  endwhile
+  bput fout (& 255 >> v 8) (& v 255)
+  set y + y 1
+ endwhile
+endfunction
+
+function loadchar local x y b j left right above below;
+ clear;
+ set y 0
+ while < y 16
+  set b bget fin
+  set x 0
+  while < x 16   
+   set Dpxl(  x  )(  y  ) !! & 128 b
+   set Dpxl(+ x 1)(  y  ) !! & 128 b
+   set Dpxl(  x  )(+ y 1) !! & 128 b
+   set Dpxl(+ x 1)(+ y 1) !! & 128 b
+   set b << b 1
+   set x + x 2
+  endwhile
+  set y + y 2
+ endwhile
+
+ set y 0
+ while < y 8
+  set x 0
+  while < x 8   
+   if ! Dpxl(<< x 1)(<< y 1)
+    set left   loadchar_pxl8( - x 1)( y) 
+    set right  loadchar_pxl8( + x 1)( y) 
+    set above  loadchar_pxl8( x )(- y 1) 
+    set below  loadchar_pxl8( x )(+ y 1)
+    # top left pixel
+    if && left above ! || below right
+     set Dpxl(<< x 1)(<< y 1) 1
+    endif
+    # top right pixel
+    if && right above ! || below left
+     set Dpxl(+ 1 << x 1)(<< y 1) 1
+    endif
+    # bottom left pixel
+    if && left below ! || above right
+     set Dpxl( << x 1)(+ 1 << y 1) 1
+    endif
+    # bottom right pixel
+    if && right below ! || above left
+     set Dpxl(+ 1 << x 1)(+ 1 << y 1) 1
+    endif
+   endif
+   set x + x 1
+  endwhile
+  set y + y 1
+ endwhile
+
+endfunction
+function loadchar_pxl8 x y; return && Dpxl( << x 1 )( << y 1 )  Dpxl( + 1 << x 1 )( << y 1 )  Dpxl( << x 1 )( + 1 << y 1 )  Dpxl(+ 1 << x 1 )( + 1 << y 1 );
+
+function clear local x y;
+ set x 0
+ while < x 16
+  set y 0
+  while < y 16
+   set Dpxl(x)(y) 0
+   set y + y 1
+  endwhile
+  set x + x 1
+ endwhile
+endfunction
+
+function pxl x y;
+ if || < x 0 < y 0 > x 15 > y 15
+  #print "shit";
+  #quit
+  return nil
+ endif
+return + pixls x * 16 y

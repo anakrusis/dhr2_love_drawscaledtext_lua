@@ -29,30 +29,32 @@
 --]]
 
 bbcfont = {}
-file = love.filesystem.newFile("font.bin")
+file = love.filesystem.newFile("font16.bin")
 file:open("r")
 content = file:read()
 file:close()
 
 -- this is repurposed from the editor code, with a few differences:
-for i = 1, #content do
-	local currchar = math.floor((i - 1) / 8);
-	local currbyte = string.byte(string.sub(content, i, i));
+for i = 1, #content, 2 do
+	local currchar = math.floor((i - 1) / 32);
+	local currbyte = string.byte(string.sub(content, i, i))*256 + string.byte(string.sub(content, i+1, i+1)); 
 	-- we create the table with eight blank rows in it here
 	if not bbcfont[currchar] then
-		bbcfont[currchar] = {{},{},{},{},{},{},{},{}};
+		bbcfont[currchar] = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}};
 	end
 	-- the row number is just i mod 8 (accounting for off-by-one lua sillyness)
-	local row = (math.floor(( i - 1 )) % 8) + 1;
+	local row = (math.floor(( i - 1 )) % 16) + 1;
 	
 	-- just as before, we just get the least significant bit and divide by 2 eight times
 	-- this gives us the bits in reverse order
-	for j = 1, 8 do
+	for j = 1, 16 do
 		-- but the insert position is always 1 now because we have these little 8-wide sub-tables
 		local insertposition = 1
 		table.insert(bbcfont[currchar][ row ], insertposition, currbyte % 2)
 		currbyte = math.floor(currbyte / 2)
 	end
+
+
 end
 
 -- defining colors for hieroglyphic text
@@ -77,6 +79,26 @@ colors = {
 --]]
 
 
+bbcfont[0] = {
+ {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+ {0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0},
+ {0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0},
+ {0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0},
+ {0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0},
+ {0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0},
+ {0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0},
+ {0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0},
+ {0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0},
+ {0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0},
+ {0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0},
+ {0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0},
+ {0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0},
+ {0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0},
+ {0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0},
+ {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}
+}
+
+
 function drawscaledtext( x, y, xs, ys, string )
 
  -- Scale factors of less than 1 are not supported.  
@@ -94,7 +116,7 @@ function drawscaledtext( x, y, xs, ys, string )
  -- This local function 'charpixel()' is used for looking up pixels in the 8x8 pixel character glyphs.
  -- Note that it assumes that bbcfont[c] is not nil. It is only called after we are sure a glyph has been defined for character byte 'c'.
  function charpixel( x, y, c )
-  if x<1 or x>8 or y<1 or y>8 then
+  if x<1 or x>16 or y<1 or y>16 then
    return false
   end
   return ( bbcfont[c][y][x] ~= 0 )
@@ -122,8 +144,8 @@ function drawscaledtext( x, y, xs, ys, string )
 	love.graphics.setColor( colors[ "white" ] );
   end
 
-  for xx=1,8,1 do               --  For each pixel in the 8x8 pixel glyph representing this character,
-   for yy=1,8,1 do              --   if the pixel is set/true, we draw it as a rectangle,
+  for xx=1,16,1 do               --  For each pixel in the 8x8 pixel glyph representing this character,
+   for yy=1,16,1 do              --   if the pixel is set/true, we draw it as a rectangle,
                                  --   else, we interpolate by drawing a set of up to 4 triangles depending on the surrounding glyph pixels.
     if charpixel( xx,   yy,  c ) then 
 
@@ -166,7 +188,7 @@ function drawscaledtext( x, y, xs, ys, string )
 
   i = i + 1
   ch = string.sub( string, i, i )
-  x = x + 8*xs
+  x = x + 16*xs
 
  end -- endwhile
 
