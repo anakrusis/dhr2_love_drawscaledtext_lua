@@ -1,0 +1,47 @@
+
+variable x y f z;
+
+startgraphics 256 256
+
+if ! _argc
+ set f openin "font16.bin"
+else
+ set f openin $0
+ if ! f
+  print "couldn't open";
+  quit
+ endif
+endif
+
+while 1
+ cls
+ gcol -1
+ set y 0
+ while < y 16
+  set x 0
+  while < x 16
+   if readbit f (+ (* 16 16 mousez) + x * 16 y)
+    rectanglef floor(* winw / x 16) floor(* winh / y 16) ceil(/ winw 16) ceil(/ winh 16)
+   endif
+   set x + x 1
+  endwhile
+  set y + y 1
+ endwhile
+ set z mousez
+ print z;
+ while && ! expose = z mousez
+  wait 16.6
+ endwhile
+endwhile
+
+
+function readbit fp bit local out preserve_ptr;
+ if || < bit 0 >= >> bit 3 ext fp
+  gcol 255 0 0
+  return -1
+ endif
+ set preserve_ptr ptr fp
+ sptr fp int / bit 8
+ set out !! & bget fp >> 128 & bit 7
+ sptr fp preserve_ptr
+return out

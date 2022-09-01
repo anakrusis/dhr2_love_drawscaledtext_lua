@@ -50,6 +50,7 @@ end
 function love.draw()
 	--love.graphics.draw(cnv)
  drawscaledtext(10,10,4,4,"Please work")
+ drawscaledtext(10,110,4,4,"AAAaaahhh")
 end
 
 function tbl2str( tbl )

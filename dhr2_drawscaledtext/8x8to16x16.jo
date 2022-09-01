@@ -28,6 +28,8 @@ while < ptr fin ext fin
  #wait 100
 endwhile
 
+close fout
+
 while ! mouseb
  wait 16.6
 endwhile

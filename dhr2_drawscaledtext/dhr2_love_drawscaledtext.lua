@@ -34,27 +34,43 @@ file:open("r")
 content = file:read()
 file:close()
 
--- this is repurposed from the editor code, with a few differences:
-for i = 1, #content, 2 do
-	local currchar = math.floor((i - 1) / 32);
-	local currbyte = string.byte(string.sub(content, i, i))*256 + string.byte(string.sub(content, i+1, i+1)); 
-	-- we create the table with eight blank rows in it here
-	if not bbcfont[currchar] then
-		bbcfont[currchar] = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}};
-	end
-	-- the row number is just i mod 8 (accounting for off-by-one lua sillyness)
-	local row = (math.floor(( i - 1 )) % 16) + 1;
-	
-	-- just as before, we just get the least significant bit and divide by 2 eight times
-	-- this gives us the bits in reverse order
-	for j = 1, 16 do
-		-- but the insert position is always 1 now because we have these little 8-wide sub-tables
-		local insertposition = 1
-		table.insert(bbcfont[currchar][ row ], insertposition, currbyte % 2)
-		currbyte = math.floor(currbyte / 2)
-	end
-
-
+-- this is rewritten from scratch
+for i = 0, #content * 8-1, 16*16 do
+ local currchar = (i)/(16*16)
+ if not bbcfont[currchar] then
+  bbcfont[currchar] = {
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, -- PENIS
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+  }
+ end
+ function getbit(bit_number)
+  local charindex = 1 + math.floor(bit_number/8)
+  local byte = string.byte(string.sub(content, charindex, charindex))
+  if byte == nil then
+   return 0
+  end
+  local bit = math.floor(byte / ( 2 ^ (7 - bit_number % 8) )) % 2
+  return bit
+ end
+ for x=1,16 do
+  for y=1,16 do
+   bbcfont[currchar][y][x]=getbit( 16*16*currchar + (x-1) + 16*(y-1) )
+  end
+ end
 end
 
 -- defining colors for hieroglyphic text
@@ -79,23 +95,24 @@ colors = {
 --]]
 
 
-bbcfont[0] = {
- {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
- {0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0},
- {0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0},
- {0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0},
- {0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0},
- {0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0},
- {0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0},
- {0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0},
- {0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0},
- {0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0},
- {0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0},
- {0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0},
- {0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0},
- {0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0},
- {0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0},
- {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}
+-- Fallback glyph
+bbcfont[0] = { 
+ {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+ {1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1},
+ {1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1},
+ {1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1},
+ {1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1},
+ {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1},
+ {1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1},
+ {1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1},
+ {1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1},
+ {1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1},
+ {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1},
+ {1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1},
+ {1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1},
+ {1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1},
+ {1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1},
+ {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 }
 
 
